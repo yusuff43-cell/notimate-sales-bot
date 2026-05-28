@@ -75,22 +75,26 @@ def get_claude_response(user_id: str, user_message: str) -> str:
     return reply
 
 def send_lead_notification(user_id: str):
-    """Push уведомление владельцу когда лид готов"""
     history = conversations.get(user_id, [])
     
-    # Собираем данные из диалога
-    summary = "\n".join([
-        f"{'Клиент' if m['role'] == 'user' else 'Бот'}: {m['content']}"
-        for m in history[-8:]
-    ])
+    messages = [m['content'] for m in history if m['role'] == 'user']
     
-    message = f"🔔 Новый лид NotiMate!\n\nДиалог:\n{summary}"
+    business = messages[1] if len(messages) > 1 else '—'
+    groups = messages[2] if len(messages) > 2 else '—'
+    contact = messages[3] if len(messages) > 3 else '—'
+    
+    business_map = {'1': 'Кофейня/Пекарня', '2': 'Ресторан', '3': 'Магазин/Услуги', '4': 'Другое'}
+    groups_map = {'1': '1 группа', '2': '2-3 группы', '3': '3+ групп'}
+    
+    message = (
+        f"🔔 Новый лид NotiMate!\n\n"
+        f"🏪 Бизнес: {business_map.get(business, business)}\n"
+        f"💬 Групп: {groups_map.get(groups, groups)}\n"
+        f"📞 Контакт: {contact}"
+    )
     
     try:
-        line_bot_api.push_message(
-            OWNER_ID,
-            TextSendMessage(text=message)
-        )
+        line_bot_api.push_message(OWNER_ID, TextSendMessage(text=message))
     except Exception as e:
         print(f"Push error: {e}")
 
