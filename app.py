@@ -232,7 +232,16 @@ def handle_message(event):
     user_message = event.message.text.strip().lower()
 
     try:
-        # Шаг 0 — выбор языка
+        # Сброс языка
+        if user_message in ['язык', 'language', 'ภาษา', '/lang', 'reset']:
+            user_languages.pop(user_id, None)
+            conversations.pop(user_id, None)
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=LANG_SELECTION_MSG)
+            )
+            return
+         # Шаг 0 — выбор языка
         if user_id not in user_languages:
             lang = LANG_MAP.get(user_message)
             if lang:
